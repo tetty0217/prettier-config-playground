@@ -1,6 +1,6 @@
 {
   "name": "@tetty0217/prettier-config-playground",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "JavaScript の技術検証（Playground）のリポジトリで使用するためのフォーマッタ設定",
   "homepage": "https://github.com/tetty0217/prettier-config-playground",
   "bugs": "https://github.com/tetty0217/prettier-config-playground/issues",
