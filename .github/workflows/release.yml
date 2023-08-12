@@ -1,0 +1,57 @@
+name: Package Release
+
+on:
+  pull_request:
+    branches: [ main ]
+    types: [ closed ]
+
+env:
+  NODE_AUTH_TOKEN: ${{ secrets.NODE_AUTH_TOKEN }}
+  NODE_VERSION: 18.16.0
+
+jobs:
+  setup:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: Cache node_modules
+        uses: actions/cache@v2
+        id: node_modules_cache_id
+        with:
+          path: node_modules
+          key: node-v${{ env.NODE_VERSION }}-deps-${{ hashFiles(format('{0}{1}', github.workspace, '/yarn.lock')) }}
+      - name: Install dependencies
+        if: steps.node_modules_cache_id.outputs.cache-hit != 'true'
+        run: yarn --frozen-lockfile
+
+  publish:
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: Restore cache
+        uses: actions/cache@v2
+        id: node_modules_cache_id
+        with:
+          path: node_modules
+          key: node-v${{ env.NODE_VERSION }}-deps-${{ hashFiles(format('{0}{1}', github.workspace, '/yarn.lock')) }}
+      - name: Configure git user
+        run: |
+          git config --global user.name tetty0217
+          git config --global user.email dev.tetty@gmail.com
+      - name: Pre Release dry
+        run: yarn release:dry
+      - name: Pre Release
+        run: |
+          yarn release
+          git push --follow-tags --force-with-lease origin main
+      - name: Publish
+        run: npm publish
+        working-directory: ./
